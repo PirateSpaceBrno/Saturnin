@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:400,400i,700&subset=latin-ext');
+
+::-moz-selection {
+    background: #81c820;
+    color: #ffffff;
+}
+::selection {
+    background: #81c820;
+    color: #ffffff;
+}
+
+html, body {
+    padding: 0;
+    margin: 0;
+    font-family: 'Roboto', sans-serif;
+}
+
+a:link, a:visited {
+    color: #81c820;
+    transition: all 0.5s linear;
+}
+
+a:hover {
+    color: #333333;
+    transition: all 0.5s linear;
+}
+
+#logo {
+    position: absolute;
+    top: 40px;
+    left: 50%;
+    margin-left: -400px;
+}
+
+#content {
+    width: 100%;
+    position: absolute;
+    top: 300px;
+    text-align: center;
+    font-size: 14pt;
+}
+
+.bigText {
+    font-size: 18pt;
+}
