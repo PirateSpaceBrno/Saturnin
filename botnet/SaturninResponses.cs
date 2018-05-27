@@ -6,6 +6,10 @@ namespace botnet
     public static class SaturninResponses
     {
         public static string Help => 
+            "Saturnin - Pirátský bot pro síť Signal\n" +
+            "--------------------------------------\n" +
+            $"{Configuration.SALUTATION}? | zobrazí tuto nápovědu\n" +
+            $"{Configuration.SALUTATION} pozdrav! | vypíše informace o botovi\n" +
             ""
         ;
 

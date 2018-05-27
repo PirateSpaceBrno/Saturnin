@@ -8,9 +8,10 @@ namespace botnet
 
         static void Main(string[] args)
         {
-            var saturnin = new Saturnin();
-            Thread receiver = new Thread(new ThreadStart(saturnin.DoWork));
-            receiver.Start();
+            DBus.Test();
+            //var saturnin = new Saturnin();
+            //Thread receiver = new Thread(new ThreadStart(saturnin.DoWork));
+            //receiver.Start();
         }
     }
 
@@ -20,7 +21,7 @@ namespace botnet
         {
             while (true)
             {
-                SignalCliCommands.Receive();
+                //SignalCliCommands.Receive();
                 Thread.Sleep(5000);
             }
         }

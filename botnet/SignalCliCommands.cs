@@ -9,6 +9,14 @@ namespace botnet
     {
         private static readonly string SignalCli = $"signal-cli -u {Configuration.USERNAME}";
 
+
+        /*
+        byte[] bytes = Encoding.ASCII.GetBytes(someString);
+        dbus-send --system --type=method_call --print-reply --dest='org.asamk.Signal' /org/asamk/Signal org.asamk.Signal.sendMessage string:'MessageText' array:string: string:'+420608828650'
+        
+        */
+
+
         public static async Task<string> ListGroups()
         {
             string groups = await ExecuteBashCommand($"{SignalCli} listGroups");
@@ -73,7 +81,7 @@ namespace botnet
                         {
                             // "get help" command
                             case var m when (m.Equals($"{Configuration.SALUTATION}?", StringComparison.InvariantCultureIgnoreCase)):
-
+                                SendMessage(SaturninResponses.Help, messageRespondTo, isGroupChat);
                                 break;
                             // "say hello" command
                             case var m when (m.Equals($"{Configuration.SALUTATION} pozdrav!", StringComparison.InvariantCultureIgnoreCase)):
