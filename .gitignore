@@ -1,2 +1,10 @@
 packages/Newtonsoft.Json.11.0.2/Newtonsoft.Json.11.0.2.nupkg
 .vs/botnet/v15/.suo
+/.vs/botnet
+/botnet/bin/Debug
+/botnet/obj/Debug
+/botnet.Tests/bin/Debug
+/botnet.Tests/obj/Debug
+/packages
+/TestResults/Saturnin.Tests_Default_2018-06-02T210411.log
+/TestResults/D/_projects/Saturnin/TestResults

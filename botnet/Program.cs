@@ -1,29 +1,18 @@
 ﻿using System.Threading;
+using NDesk.DBus;
 
-namespace botnet
+namespace Saturnin
 {
     class Program
     {
-        
-
         static void Main(string[] args)
         {
-            DBus.Test();
-            //var saturnin = new Saturnin();
-            //Thread receiver = new Thread(new ThreadStart(saturnin.DoWork));
-            //receiver.Start();
+            //new Saturnin().SendMessage("test", "+420608828650", null);
+            new Saturnin(Bus.System).ReadMessages();
+
+            //Thread.Sleep(60 * 1000);
         }
     }
 
-    public class Saturnin
-    {
-        public void DoWork()
-        {
-            while (true)
-            {
-                //SignalCliCommands.Receive();
-                Thread.Sleep(5000);
-            }
-        }
-    }
+
 }
