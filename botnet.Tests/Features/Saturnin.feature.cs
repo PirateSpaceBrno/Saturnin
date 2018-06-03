@@ -68,6 +68,8 @@ namespace Saturnin.Tests.Features
         [NUnit.Framework.TestCaseAttribute("Saturnine, kolik členů má KS Jihomoravský kraj?", "+420608828650", "", "Skupina \'KS Jihomoravský kraj\' má k tomuto okamžiku 51 členů.", "+420608828650", "", null)]
         [NUnit.Framework.TestCaseAttribute("Saturnine, kolik členů má KS Jihomoravský kraj?", "+420608828650", "", "Skupina \'KS Jihomoravský kraj\' má k tomuto okamžiku 50 členů.", "+420608828650", "", null)]
         [NUnit.Framework.TestCaseAttribute("Saturnine, řekni vtip", "+420608828650", "", "", "", "", null)]
+        [NUnit.Framework.TestCaseAttribute("Saturnine, v 1:00 pošli zprávu s textem \'Ahoj zmetku\' na číslo \'+420608828650\'", "+420608828650", "", "Odeslání zprávy na číslo \'+420608828650\' mám naplánováno a provedu v 6/4/2018 1:0" +
+            "0:00 AM", "+420608828650", "", null)]
         public virtual void TestSaturninResponses(string receivedMessage, string receivedFrom, string receivedGroup, string sendMessage, string sendTo, string sendGroup, string[] exampleTags)
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Test Saturnin responses", exampleTags);

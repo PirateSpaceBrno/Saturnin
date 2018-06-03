@@ -1,20 +1,35 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using Saturnin.Texts;
 
 namespace Saturnin.Helpers
 {
     public static class Log
     {
-        public static void Write(string logMessage, LogLevel logLevel = LogLevel.INFO)
+        public static async void Write(string logMessage, LogLevel logLevel = LogLevel.INFO)
         {
-            if (Configuration.DEBUG == false && logLevel == LogLevel.DEBUG) return;
+            if (IsDebugRun() == false && logLevel == LogLevel.DEBUG) return;
 
-            Console.WriteLine(DateTime.Now.ToString("<yyyy-MM-dd HH:mm:ss>") + " [" + logLevel.ToString() + "] " + logMessage);
+            await Task.Run(() =>
+            {
+                Console.WriteLine(DateTime.Now.ToString("<yyyy-MM-dd HH:mm:ss>") + " [" + logLevel.ToString() + "] " + logMessage);
+            });
+            
         }
 
-        public static void Line()
+        public static async void Line()
         {
-            Console.WriteLine("------------------------------");
+            await Task.Run(() =>
+            {
+                Console.WriteLine("------------------------------");
+            });
+            
+        }
+
+        public static bool IsDebugRun()
+        {
+            return File.Exists($"{Environment.CurrentDirectory}/DEBUG");
         }
 
         public enum LogLevel
