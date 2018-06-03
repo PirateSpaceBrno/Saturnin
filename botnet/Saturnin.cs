@@ -275,6 +275,8 @@ namespace Saturnin
                         
                         groupsNames.Add(new Tuple<byte[], string, DateTime>(groupId, groupName, DateTime.Now));
 
+                        Log.Write($"Group members: {string.Join(", ", _service.getGroupMembers(groupId))}", Log.LogLevel.DEBUG);
+
                         return groupName;
                     });
                 }
