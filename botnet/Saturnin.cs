@@ -17,7 +17,7 @@ namespace Saturnin
 {
     public class Saturnin
     {
-        #region Global variables
+#region Global variables
         private ISignal _service;
         private Thread _receiver = null;
         private ObjectPath opath = new ObjectPath(Configuration.DBUS_OBJECT_PATH);
@@ -25,9 +25,9 @@ namespace Saturnin
         private List<Tuple<byte[], string, DateTime>> groupsNames = new List<Tuple<byte[], string, DateTime>>();
         private WebClient webClient = new WebClient();
         private List<ScheduledMessage> scheduledMessages = new List<ScheduledMessage>();
-        #endregion
+#endregion
 
-        #region Constructor
+#region Constructor
         public Saturnin()
         {
             // Just for tests
@@ -48,9 +48,9 @@ namespace Saturnin
                 Environment.Exit(0);
             }
         }
-        #endregion
+#endregion
 
-        #region Read messages and react
+#region Read messages and react
         /// <summary>
         /// Will listen for new messages and react on them
         /// </summary>
@@ -142,8 +142,6 @@ namespace Saturnin
 
                             if(graphApiGroupName != "")
                             {
-                                SendMessage(SaturninResponses.Wait, sender, groupId);
-
                                 // Get groups from graph.pirati.cz
                                 string graphApiGroupsJson = await webClient.DownloadStringTaskAsync("https://graph.pirati.cz/groups");
 
@@ -165,6 +163,18 @@ namespace Saturnin
                                     SendMessage($"Skupina '{graphApiGroupName}' nebyla nalezena.", sender, groupId);
                                 }
                             }
+
+                            break;
+                        // GraphApi graph.pirati.cz - return list of all groups
+                        case var m when m.RemoveDiacritics().StartsWith($"{Configuration.SALUTATION}, vypis vsechny skupiny", StringComparison.InvariantCultureIgnoreCase):
+                            // Get groups from graph.pirati.cz
+                            string graphApiGroupsListJson = await webClient.DownloadStringTaskAsync("https://graph.pirati.cz/groups");
+
+                            var graphApiListGroups = JsonConvert.DeserializeObject<List<GraphApiGroup>>(graphApiGroupsListJson);
+
+                            var q = string.Join(",\n", graphApiListGroups.Select(x => x.username));
+
+                            SendMessage($"Pirátské fórum má nyní tyto skupiny:\n\n{q}", sender, groupId);
 
                             break;
                         // Grab random joke from lamer.cz

@@ -14,6 +14,8 @@ namespace Saturnin.Texts
             "\n" +
             $"{Configuration.SALUTATION}, kolik členů má SKUPINA? | vrátí počet členů definované skupiny z Pirátského fóra\n" +
             "\n" +
+            $"{Configuration.SALUTATION}, vypiš všechny skupiny. | vrátí seznam všech skupin z Pirátského fóra\n" +
+            "\n" +
             $"{Configuration.SALUTATION}, řekni vtip | vrátí náhodný vtip ze stránky Lamer.cz\n" +
             "\n" +
             $"{Configuration.SALUTATION}, ve ČAS pošli zprávu s textem 'TEXT' na číslo +420123456789 | vytvoří plánovanou zprávu\n" +
