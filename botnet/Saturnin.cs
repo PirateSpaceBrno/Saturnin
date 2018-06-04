@@ -228,18 +228,18 @@ namespace Saturnin
                             break;
                         // DPMB
                         case var m when Regex.IsMatch(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, sleduj DPMB linku (\d+) v okruhu (\d+) metru od bodu (.*),(.*)", RegexOptions.IgnoreCase):
-                            SubscribeOnDpmb(Regex.Match(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, sleduj DPMB linku (\d+) v okruhu (\d+) metru od bodu (.*),(.*)", RegexOptions.IgnoreCase), sender);
+                            SubscribeOnDpmb(Regex.Match(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, sleduj DPMB linku (\d+) v okruhu (\d+) metru od bodu (.*),(.*)", RegexOptions.IgnoreCase), sender, groupId);
                             break;
                         case var m when Regex.IsMatch(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, prestan sledovat DPMB linku (\d+)", RegexOptions.IgnoreCase):
                             Match match1 = Regex.Match(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, prestan sledovat DPMB linku (\d+)", RegexOptions.IgnoreCase);
                             var line = match1.Groups[1].Value.ToString();
-                            RemoveDpmbSubscribers(sender, line);
+                            RemoveDpmbSubscribers(sender, groupId, line);
                             break;
                         case var m when Regex.IsMatch(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, prestan sledovat vsechny DPMB linky", RegexOptions.IgnoreCase):
-                            RemoveDpmbSubscribers(sender);
+                            RemoveDpmbSubscribers(sender, groupId);
                             break;
                         case var m when Regex.IsMatch(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, jake sledujes DPMB linky", RegexOptions.IgnoreCase):
-                            ListAllMyDpmbSubscribers(sender);
+                            ListAllMyDpmbSubscribers(sender, groupId);
                             break;
                     }
                 }
@@ -342,6 +342,7 @@ namespace Saturnin
             public string recipient;
             public string messageText;
             public string sender;
+            public byte[] groupId;
         }
 
         public void WatchScheduledMessages()
@@ -377,7 +378,7 @@ namespace Saturnin
                         }
                         else
                         {
-                            SendMessage(scheduledMessage.messageText, scheduledMessage.recipient, null);
+                            SendMessage(scheduledMessage.messageText, scheduledMessage.recipient, scheduledMessage.groupId);
                         }
                             
 
@@ -404,20 +405,21 @@ namespace Saturnin
                 messageText = scheduledMessageText,
                 recipient = scheduledMessageRecipient,
                 scheduledTime = scheduledMessageTime,
-                sender = sender
+                sender = sender,
+                groupId = groupId
             };
 
             scheduledMessages.Add(scheduledMessage);
 
             if(senderIsRecipient)
-                SendMessage($"Naplánoval jsem odeslání zprávy na tvé číslo dne {scheduledMessageTime.ToString("dd.MM.yyyy v HH:mm")}.", sender, null);
+                SendMessage($"Naplánoval jsem odeslání zprávy na tvé číslo dne {scheduledMessageTime.ToString("dd.MM.yyyy v HH:mm")}.", sender, groupId);
             else
-                SendMessage($"Naplánoval jsem odeslání zprávy na číslo '{scheduledMessageRecipient}' dne {scheduledMessageTime.ToString("dd.MM.yyyy v HH:mm")}.", sender, groupId);
+                SendMessage($"Naplánoval jsem odeslání zprávy na číslo '{scheduledMessageRecipient}' dne {scheduledMessageTime.ToString("dd.MM.yyyy v HH:mm")}.", sender, null);
         }
 #endregion
 
 #region DPMB
-        public void SubscribeOnDpmb(Match match, string sender)
+        public void SubscribeOnDpmb(Match match, string sender, byte[] groupId)
         {
             var dpmbSubscriber = new DpmbSubscriber()
             {
@@ -429,13 +431,14 @@ namespace Saturnin
                     longitude = Convert.ToDouble(match.Groups[4].Value)
                 },
                 sender = sender,
+                groupId = groupId,
                 lastSentMessage = DateTime.Now
             };
 
             // Remove previous subscriber of this line
             dpmbSubscribers.Add(dpmbSubscriber);
 
-            SendMessage($"DPMB linku {dpmbSubscriber.lineNumber} jsem přidal do sledovaných.", sender, null);
+            SendMessage($"DPMB linku {dpmbSubscriber.lineNumber} jsem přidal do sledovaných.", sender, groupId);
         }
 
         public struct DpmbSubscriber
@@ -444,6 +447,7 @@ namespace Saturnin
             public GeoCoordinations centerPoint;
             public double radius;
             public string sender;
+            public byte[] groupId;
             public DateTime lastSentMessage;
         }
 
@@ -477,7 +481,7 @@ namespace Saturnin
                             dpmbSubscribers.Remove(subscriber);
                             dpmbSubscribers.Add(newSubscriber);
 
-                            SendMessage(message, subscriber.sender, null);
+                            SendMessage(message, subscriber.sender, subscriber.groupId);
                         }
                     }
                 }
@@ -491,21 +495,21 @@ namespace Saturnin
             _scheduledSender.Start();
         }
 
-        public void RemoveDpmbSubscribers(string sender, string line = "")
+        public void RemoveDpmbSubscribers(string sender, byte[] groupId, string line = "")
         {
             if(line != "")
             {
                 dpmbSubscribers.RemoveAll(x => x.sender == sender && x.lineNumber == line);
-                SendMessage($"Odebral jsem všechna tvá sledování DPMB linky {line}.", sender, null);
+                SendMessage($"Odebral jsem všechna tvá sledování DPMB linky {line}.", sender, groupId);
             }
             else
             {
                 dpmbSubscribers.RemoveAll(x => x.sender == sender);
-                SendMessage($"Odebral jsem všechna tvá sledování DPMB linek.", sender, null);
+                SendMessage($"Odebral jsem všechna tvá sledování DPMB linek.", sender, groupId);
             }
         }
 
-        public void ListAllMyDpmbSubscribers(string sender)
+        public void ListAllMyDpmbSubscribers(string sender, byte[] groupId)
         {
             var mySubscribers = dpmbSubscribers.Where(x => x.sender == sender).Select(x => new KeyValuePair<string, GeoCoordinations>(x.lineNumber, x.centerPoint));
 
@@ -513,7 +517,7 @@ namespace Saturnin
 
             SendMessage(
                 $"Sleduji tyto DPMB linky:\n{lines}",
-                sender, null);
+                sender, groupId);
         }
         #endregion
     }
