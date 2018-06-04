@@ -59,6 +59,11 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Features\GeoLocationHelper.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>GeoLocationHelper.feature</DependentUpon>
+    </Compile>
     <Compile Include="Features\Saturnin.feature.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -70,11 +75,16 @@
       <DependentUpon>TextHelper.feature</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Steps\GeoLocationSteps.cs" />
     <Compile Include="Steps\SaturninSteps.cs" />
     <Compile Include="Steps\TextHelperSteps.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="Features\GeoLocationHelper.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>GeoLocationHelper.feature.cs</LastGenOutput>
+    </None>
     <None Include="Features\Saturnin.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>Saturnin.feature.cs</LastGenOutput>

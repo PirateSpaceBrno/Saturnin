@@ -51,11 +51,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\GeoLocationHelper.cs" />
+    <Compile Include="Helpers\Serialization.cs" />
     <Compile Include="Helpers\TextHelper.cs" />
     <Compile Include="Helpers\WebHelper.cs" />
+    <Compile Include="Models\Dpmb.cs" />
     <Compile Include="Models\GraphApi\Groups.cs" />
     <Compile Include="Models\GraphApi\Members.cs" />
     <Compile Include="Interfaces\IServer.cs" />
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <Compile Include="Texts\Configuration.cs" />
     <Compile Include="Helpers\LinuxHelper.cs" />
     <Compile Include="Saturnin.cs" />
@@ -71,7 +79,12 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <None Include="app.config" />
     <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="Properties\Resources.resx">

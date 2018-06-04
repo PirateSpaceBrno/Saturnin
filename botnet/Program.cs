@@ -10,6 +10,7 @@ namespace Saturnin
             Saturnin saturnin = new Saturnin(Bus.System);
             saturnin.ReadMessages();
             saturnin.WatchScheduledMessages();
+            saturnin.WatchDpmbSubscribers();
         }
     }
 

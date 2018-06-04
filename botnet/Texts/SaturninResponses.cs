@@ -25,6 +25,14 @@ namespace Saturnin.Texts
             $"{Configuration.SALUTATION}, zruš mé naplánované zprávy | odstraní všechny naplánované zprávy\n" +
             "\n" +
             $"{Configuration.SALUTATION}, kolik mám naplánovaných zpráv? | vypíše počet aktuálně naplánovaných zpráv\n" +
+            "\n" +
+            $"{Configuration.SALUTATION}, sleduj DPMB linku 123 v okruhu 200 metrů od bodu 49.19083,16.60498 | pošle zprávu, když se nějaký vůz DPMB linky 123 bude nacházet 200 metrů od bodu zadaného souřadnicemi\n" +
+            "\n" +
+            $"{Configuration.SALUTATION}, přestaň sledovat DPMB linku 123 | přestane zasílat informace o poloze DPMB linky 123\n" +
+            "\n" +
+            $"{Configuration.SALUTATION}, přestaň sledovat všechny DPMB linky | přestane zasílat informace o poloze všech odebíraných linek DPMB\n" +
+            "\n" +
+            $"{Configuration.SALUTATION}, jaké sleduješ DPMB linky? | pošle seznam sledovaných linek DPMB\n" +
             "\n"
         ;
 

@@ -1,17 +1,19 @@
-﻿using NDesk.DBus;
+﻿using HtmlAgilityPack;
+using NDesk.DBus;
 using Newtonsoft.Json;
 using Saturnin.Helpers;
 using Saturnin.Interfaces;
-using Saturnin.Texts;
+using Saturnin.Models;
 using Saturnin.Models.GraphApi;
+using Saturnin.Texts;
 using System;
 using System.Collections.Generic;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Linq;
 using System.Net;
-using HtmlAgilityPack;
 using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+using static Saturnin.Helpers.GeoLocationHelper;
 
 namespace Saturnin
 {
@@ -25,6 +27,7 @@ namespace Saturnin
         private List<Tuple<byte[], string, DateTime>> groupsNames = new List<Tuple<byte[], string, DateTime>>();
         private WebClient webClient = new WebClient();
         private List<ScheduledMessage> scheduledMessages = new List<ScheduledMessage>();
+        private List<DpmbSubscriber> dpmbSubscribers = new List<DpmbSubscriber>();
 #endregion
 
 #region Constructor
@@ -223,6 +226,21 @@ namespace Saturnin
                                 SendMessage($"Právě máš naplánováno {messageCount} zpráv.", sender, null);
                             }
                             break;
+                        // DPMB
+                        case var m when Regex.IsMatch(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, sleduj DPMB linku (\d+) v okruhu (\d+) metru od bodu (.*),(.*)", RegexOptions.IgnoreCase):
+                            SubscribeOnDpmb(Regex.Match(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, sleduj DPMB linku (\d+) v okruhu (\d+) metru od bodu (.*),(.*)", RegexOptions.IgnoreCase), sender);
+                            break;
+                        case var m when Regex.IsMatch(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, prestan sledovat DPMB linku (\d+)", RegexOptions.IgnoreCase):
+                            Match match1 = Regex.Match(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, prestan sledovat DPMB linku (\d+)", RegexOptions.IgnoreCase);
+                            var line = match1.Groups[1].Value.ToString();
+                            RemoveDpmbSubscribers(sender, line);
+                            break;
+                        case var m when Regex.IsMatch(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, prestan sledovat vsechny DPMB linky", RegexOptions.IgnoreCase):
+                            RemoveDpmbSubscribers(sender);
+                            break;
+                        case var m when Regex.IsMatch(m.RemoveDiacritics(), $@"{Configuration.SALUTATION}, jake sledujes DPMB linky", RegexOptions.IgnoreCase):
+                            ListAllMyDpmbSubscribers(sender);
+                            break;
                     }
                 }
             }
@@ -396,7 +414,107 @@ namespace Saturnin
             else
                 SendMessage($"Naplánoval jsem odeslání zprávy na číslo '{scheduledMessageRecipient}' dne {scheduledMessageTime.ToString("dd.MM.yyyy v HH:mm")}.", sender, groupId);
         }
-
 #endregion
+
+#region DPMB
+        public void SubscribeOnDpmb(Match match, string sender)
+        {
+            var dpmbSubscriber = new DpmbSubscriber()
+            {
+                lineNumber = match.Groups[1].Value.ToString(),
+                radius = Convert.ToDouble(match.Groups[2].Value),
+                centerPoint = new GeoCoordinations()
+                {
+                    latitude = Convert.ToDouble(match.Groups[3].Value),
+                    longitude = Convert.ToDouble(match.Groups[4].Value)
+                },
+                sender = sender,
+                lastSentMessage = DateTime.Now
+            };
+
+            // Remove previous subscriber of this line
+            dpmbSubscribers.Add(dpmbSubscriber);
+
+            SendMessage($"DPMB linku {dpmbSubscriber.lineNumber} jsem přidal do sledovaných.", sender, null);
+        }
+
+        public struct DpmbSubscriber
+        {
+            public string lineNumber;
+            public GeoCoordinations centerPoint;
+            public double radius;
+            public string sender;
+            public DateTime lastSentMessage;
+        }
+
+        private void PollDpmbSubscribers(object sender, EventArgs e)
+        {
+            var storeCount = dpmbSubscribers.Count;
+
+            Log.Write($"Polling for DPMB subscribers, actual count in store = {storeCount}", Log.LogLevel.DEBUG);
+
+            if (storeCount > 0)
+            {
+                foreach (var subscriber in dpmbSubscribers)
+                {
+                    if(DateTime.Now.Subtract(subscriber.lastSentMessage).TotalMinutes > 1)
+                    {
+                        var buses = WatchDpmbLine(subscriber).Result;
+                        if (buses.Count > 0)
+                        {
+                            var message =
+                                $"V okruhu {subscriber.radius.ToString()} metrů od bodu [{subscriber.centerPoint.latitude.ToString()},{subscriber.centerPoint.longitude.ToString()}] se právě nachází {buses.Count.ToString()} vozů DPMB linky {subscriber.lineNumber}.\n";
+
+                            foreach (var bus in buses)
+                            {
+                                if (bus.headsign != "")
+                                    message += $"\n{bus.headsign}";
+                            }
+
+                            // Change lastSentTime in subscriber
+                            var newSubscriber = subscriber;
+                            newSubscriber.lastSentMessage = DateTime.Now;
+                            dpmbSubscribers.Remove(subscriber);
+                            dpmbSubscribers.Add(newSubscriber);
+
+                            SendMessage(message, subscriber.sender, null);
+                        }
+                    }
+                }
+            }
+        }
+
+        public void WatchDpmbSubscribers()
+        {
+            System.Timers.Timer _scheduledSender = new System.Timers.Timer(Configuration.DPMBPOLLINGINTERVAL);
+            _scheduledSender.Elapsed += PollDpmbSubscribers;
+            _scheduledSender.Start();
+        }
+
+        public void RemoveDpmbSubscribers(string sender, string line = "")
+        {
+            if(line != "")
+            {
+                dpmbSubscribers.RemoveAll(x => x.sender == sender && x.lineNumber == line);
+                SendMessage($"Odebral jsem všechna tvá sledování DPMB linky {line}.", sender, null);
+            }
+            else
+            {
+                dpmbSubscribers.RemoveAll(x => x.sender == sender);
+                SendMessage($"Odebral jsem všechna tvá sledování DPMB linek.", sender, null);
+            }
+        }
+
+        public void ListAllMyDpmbSubscribers(string sender)
+        {
+            var mySubscribers = dpmbSubscribers.Where(x => x.sender == sender).Select(x => new KeyValuePair<string, GeoCoordinations>(x.lineNumber, x.centerPoint));
+
+            var lines = string.Join("\n", mySubscribers.Select(x => $"{x.Key} [{x.Value.latitude.ToString()},{x.Value.longitude.ToString()}]"));
+
+            SendMessage(
+                $"Sleduji tyto DPMB linky:\n{lines}",
+                sender, null);
+        }
+        #endregion
     }
 }

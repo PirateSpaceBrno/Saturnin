@@ -8,5 +8,6 @@
         public const string DBUS_OBJECT_PATH = "/org/asamk/Signal";
         public const string DBUS_NAME = "org.asamk.Signal";
         public const double POLLINGINTERVAL = 20000;
+        public const double DPMBPOLLINGINTERVAL = 5000;
     }
 }
