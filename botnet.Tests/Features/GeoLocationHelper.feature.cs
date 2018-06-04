@@ -70,7 +70,8 @@ namespace Saturnin.Tests.Features
         [NUnit.Framework.TestCaseAttribute("49.1922918", "16.6025405", "outside", "49.1989733", "16.5971546", "1", null)]
         [NUnit.Framework.TestCaseAttribute("49.1908375", "16.6049822", "outside", "49.1989733", "16.5971546", "10", null)]
         [NUnit.Framework.TestCaseAttribute("49.1908375", "16.6049822", "outside", "49.1989733", "16.5971546", "100", null)]
-        [NUnit.Framework.TestCaseAttribute("49.1908375", "16.6049822", "inside", "49.1989733", "16.5971546", "1000", null)]
+        [NUnit.Framework.TestCaseAttribute("49.1908375", "16.6049822", "outside", "49.1989733", "16.5971546", "1000", null)]
+        [NUnit.Framework.TestCaseAttribute("49.1908375", "16.6049822", "inside", "49.1989733", "16.5971546", "10000", null)]
         public virtual void TestIfPointIsInsideCircle(string lat1, string lon1, string insideOutside, string lat2, string lon2, string radius, string[] exampleTags)
         {
             TechTalk.SpecFlow.ScenarioInfo scenarioInfo = new TechTalk.SpecFlow.ScenarioInfo("Test if point is inside circle", exampleTags);
