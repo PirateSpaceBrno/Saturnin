@@ -54,13 +54,10 @@ namespace Saturnin.Helpers
         /// Zjistí, zda se nějaký autobus DPMB zadané linky nachází v okruhu zadaného místa
         /// </summary>
         /// <param name="dpmbSubscriber"></param>
+        /// <param name="buses"></param>
         /// <returns></returns>
-        public static async Task<List<DpmbRisObject>> WatchDpmbLine(DpmbSubscriber dpmbSubscriber)
+        public static async Task<List<DpmbRisObject>> WatchDpmbLine(DpmbSubscriber dpmbSubscriber, List<DpmbRisObject> buses)
         {
-            WebClient webClient = new WebClient();
-            string json = await webClient.DownloadStringTaskAsync($"http://sotoris.cz/DataSource/CityHack2015/vehiclesBrno.aspx?route={dpmbSubscriber.lineNumber}");
-
-            var buses = JsonConvert.DeserializeObject<List<DpmbRisObject>>(json);
             List<DpmbRisObject> result = new List<DpmbRisObject>();
 
             foreach(DpmbRisObject bus in buses)

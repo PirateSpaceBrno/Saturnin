@@ -120,10 +120,15 @@ namespace Saturnin
                         case var m when (m.StartsWith($"{Configuration.SALUTATION}, pozdrav", StringComparison.InvariantCultureIgnoreCase)):
                             SendMessage(SaturninResponses.Hello, sender, groupId);
                             break;
+                        // "welcome" command
+                        case var m when (m.RemoveDiacritics().StartsWith($"{Configuration.SALUTATION}, pozdrav uzivatele ", StringComparison.InvariantCultureIgnoreCase)):
+                            var rec = m.RemoveDiacritics().Replace($"{Configuration.SALUTATION}, pozdrav uzivatele ", "");
+                            WelcomeUser(rec);
+                            SendMessage($"Uživatel {rec} byl přivítán.", sender, groupId);
+                            break;
                         // when url present, return webpage title
-                        case var m when (m.Contains("http://") || m.Contains("https://")):
-                            var messageSplitted = m.Split(' ');
-                            var url = messageSplitted.FirstOrDefault (x => x.StartsWith("http") || x.StartsWith("https"));
+                        case var m when Regex.IsMatch(m.RemoveDiacritics(), @"(((http|https):\/\/)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))", RegexOptions.IgnoreCase & RegexOptions.Multiline):
+                            var url = Regex.Match(m.RemoveDiacritics(), @"(((http|https):\/\/)?[-a-zA-Z0-9@:%._\+~#=]{2,256}\.[a-z]{2,6}\b([-a-zA-Z0-9@:%_\+.~#?&//=]*))", RegexOptions.IgnoreCase & RegexOptions.Multiline).Groups[1].Value;
                             var urlTitle = WebHelper.GetUrlTitle(url);
                             
                             if(urlTitle != null && urlTitle != "")
@@ -201,12 +206,12 @@ namespace Saturnin
 
                             break;
                         // Schedule to send message
-                        case var m when Regex.IsMatch(m.RemoveDiacritics(), SaturninResponses.ScheduleMessage):
-                            ScheduleMessage(Regex.Match(m.RemoveDiacritics(), SaturninResponses.ScheduleMessage), sender, null);
+                        case var m when Regex.IsMatch(m.RemoveDiacritics(), SaturninResponses.ScheduleMessage, RegexOptions.IgnoreCase):
+                            ScheduleMessage(Regex.Match(m.RemoveDiacritics(), SaturninResponses.ScheduleMessage, RegexOptions.IgnoreCase), sender, null);
                             break;
                         // Schedule to send message back to sender
-                        case var m when Regex.IsMatch(m.RemoveDiacritics(), SaturninResponses.ScheduleMessageForMe):
-                            ScheduleMessage(Regex.Match(m.RemoveDiacritics(), SaturninResponses.ScheduleMessageForMe), sender, null, true);
+                        case var m when Regex.IsMatch(m.RemoveDiacritics(), SaturninResponses.ScheduleMessageForMe, RegexOptions.IgnoreCase):
+                            ScheduleMessage(Regex.Match(m.RemoveDiacritics(), SaturninResponses.ScheduleMessageForMe, RegexOptions.IgnoreCase), sender, null, true);
                             break;
                         // Unschedule messages
                         case var m when m.RemoveDiacritics().StartsWith($"{Configuration.SALUTATION}, zrus me naplanovane zpravy"):
@@ -248,6 +253,12 @@ namespace Saturnin
             {
                 Log.Write($"{e.Message} | StackTrace: {e.StackTrace}", Log.LogLevel.ERROR);
             }
+        }
+
+        public void WelcomeUser(string recipient)
+        {
+            SendMessage(SaturninResponses.Hello, recipient, null);
+            SendMessage(SaturninResponses.Help, recipient, null);
         }
 #endregion
 
@@ -459,15 +470,21 @@ namespace Saturnin
 
             if (storeCount > 0)
             {
+                WebClient webClient = new WebClient();
+                string json = webClient.DownloadStringTaskAsync("http://sotoris.cz/DataSource/CityHack2015/vehiclesBrno.aspx").Result;
+
+                var buses = JsonConvert.DeserializeObject<List<DpmbRisObject>>(json);
+
+
                 foreach (var subscriber in dpmbSubscribers)
                 {
                     if(DateTime.Now.Subtract(subscriber.lastSentMessage).TotalMinutes > 1)
                     {
-                        var buses = WatchDpmbLine(subscriber).Result;
-                        if (buses.Count > 0)
+                        var busesInRadius = WatchDpmbLine(subscriber, buses).Result;
+                        if (busesInRadius.Count > 0)
                         {
                             var message =
-                                $"V okruhu {subscriber.radius.ToString()} metrů od bodu [{subscriber.centerPoint.latitude.ToString()},{subscriber.centerPoint.longitude.ToString()}] se právě nachází {buses.Count.ToString()} vozů DPMB linky {subscriber.lineNumber}.\n";
+                                $"V okruhu {subscriber.radius.ToString()} metrů od bodu [{subscriber.centerPoint.latitude.ToString()},{subscriber.centerPoint.longitude.ToString()}] se právě nachází {busesInRadius.Count.ToString()} vozů DPMB linky {subscriber.lineNumber}.\n";
 
                             foreach (var bus in buses)
                             {
