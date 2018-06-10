@@ -36,5 +36,10 @@ namespace Saturnin.Helpers
             stream.Position = 0;
             return stream;
         }
+
+        public static byte[] ToByteArray(this string text)
+        {
+            return Encoding.Default.GetBytes(text);
+        }
     }
 }

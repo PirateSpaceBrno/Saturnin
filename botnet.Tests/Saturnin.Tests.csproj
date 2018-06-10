@@ -69,6 +69,11 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Saturnin.feature</DependentUpon>
     </Compile>
+    <Compile Include="Features\SubscriberStore.feature.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>SubscriberStore.feature</DependentUpon>
+    </Compile>
     <Compile Include="Features\TextHelper.feature.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -77,6 +82,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Steps\GeoLocationSteps.cs" />
     <Compile Include="Steps\SaturninSteps.cs" />
+    <Compile Include="Steps\SubscriptionStoreSteps.cs" />
     <Compile Include="Steps\TextHelperSteps.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -88,6 +94,10 @@
     <None Include="Features\Saturnin.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>
       <LastGenOutput>Saturnin.feature.cs</LastGenOutput>
+    </None>
+    <None Include="Features\SubscriberStore.feature">
+      <Generator>SpecFlowSingleFileGenerator</Generator>
+      <LastGenOutput>SubscriberStore.feature.cs</LastGenOutput>
     </None>
     <None Include="Features\TextHelper.feature">
       <Generator>SpecFlowSingleFileGenerator</Generator>

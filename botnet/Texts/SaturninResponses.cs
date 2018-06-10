@@ -12,6 +12,8 @@ namespace Saturnin.Texts
             "\n" +
             $"{Configuration.SALUTATION}, pozdrav! | vypíše informace o botovi\n" +
             "\n" +
+            $"{Configuration.SALUTATION}, pozdrav uživatele +420123456789 | zašle uvítací zprávu uživateli Signalu na čísle +420123456789\n" +
+            "\n" +
             $"{Configuration.SALUTATION}, kolik členů má SKUPINA? | vrátí počet členů definované skupiny z Pirátského fóra\n" +
             "\n" +
             $"{Configuration.SALUTATION}, vypiš všechny skupiny. | vrátí seznam všech skupin z Pirátského fóra\n" +
@@ -41,7 +43,9 @@ namespace Saturnin.Texts
             "Prozatím jsem ve vývoji, ale postupně se učím nové dovednosti.\n" +
             "Pokud se o mě chceš dozvědět více nebo se připojit k mému vývoji, navštiv stránku http://saturnin.piratsky.space/. Jsem svobodný, zveřejněný pod licencí GNU GPLv3 a mé zdrojové kódy najdeš na https://github.com/PirateSpaceBrno/Saturnin. \n" +
             "\n" +
-            $"Naposledy mě vylepšili {new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime}"
+            "Zašli odpověď \"Saturnine?\" (bez uvozovek) pro získání seznamu dostupných příkazů.\n" +
+            "\n" +
+            $"Datum mého posledního vylepšení: {new FileInfo(Assembly.GetExecutingAssembly().Location).LastWriteTime.ToString("dd.MM.yyyy")}"
         ;
 
         public static string Wait =>
@@ -49,11 +53,11 @@ namespace Saturnin.Texts
         ;
 
         public static string ScheduleMessageForMe =>
-            $@"(({Configuration.SALUTATION}|{Configuration.SALUTATION.ToLowerInvariant()}), (v|ve) (.*) mi po(s|š)li zpr(a|á)vu s textem '(.*)')"
+            $@"(({Configuration.SALUTATION}, (v|ve)) (.*) mi po(s|š)li zpr(a|á)vu s textem '(.*)')"
         ;
 
         public static string ScheduleMessage =>
-            $@"(({Configuration.SALUTATION}|{Configuration.SALUTATION.ToLowerInvariant()}), (v|ve) (.*) po(s|š)li zpr(a|á)vu s textem '(.*)' na (ci|čí)slo (.*))"
+            $@"(({Configuration.SALUTATION}, (v|ve)) (.*) po(s|š)li zpr(a|á)vu s textem '(.*)' na (ci|čí)slo (.*))"
         ;
     }
 }

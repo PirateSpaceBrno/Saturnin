@@ -24,10 +24,10 @@ namespace Saturnin
         private Thread _receiver = null;
         private ObjectPath opath = new ObjectPath(Configuration.DBUS_OBJECT_PATH);
         private Bus _conn;
-        private List<Tuple<byte[], string, DateTime>> groupsNames = new List<Tuple<byte[], string, DateTime>>();
+        private SubscriptionStore<GroupIdentification> groupsNames = new SubscriptionStore<GroupIdentification>($"{Environment.CurrentDirectory}/SignalGroups.json");
         private WebClient webClient = new WebClient();
-        private List<ScheduledMessage> scheduledMessages = new List<ScheduledMessage>();
-        private List<DpmbSubscriber> dpmbSubscribers = new List<DpmbSubscriber>();
+        private ScheduledMessagesSubscriptionStore<ScheduledMessage> scheduledMessagesStore = new ScheduledMessagesSubscriptionStore<ScheduledMessage>($"{Environment.CurrentDirectory}/ScheduledMessages.json");
+        private DpmbSubscriptionStore<DpmbSubscriber> dpmbSubscribersStore = new DpmbSubscriptionStore<DpmbSubscriber>($"{Environment.CurrentDirectory}/DpmbSubscribers.json");
 #endregion
 
 #region Constructor
@@ -214,21 +214,21 @@ namespace Saturnin
                             ScheduleMessage(Regex.Match(m.RemoveDiacritics(), SaturninResponses.ScheduleMessageForMe, RegexOptions.IgnoreCase), sender, null, true);
                             break;
                         // Unschedule messages
-                        case var m when m.RemoveDiacritics().StartsWith($"{Configuration.SALUTATION}, zrus me naplanovane zpravy"):
-                            var removedMessagesCount = scheduledMessages.RemoveAll(x => x.sender == sender);
+                        case var m when Regex.IsMatch(m.RemoveDiacritics(), $"{Configuration.SALUTATION}, zrus me naplanovane zpravy", RegexOptions.IgnoreCase):
+                            var removedMessagesCount = scheduledMessagesStore.RemoveAll(sender);
 
                             SendMessage($"Odebral jsem všech tvých {removedMessagesCount} naplánovaných zpráv.", sender, null);
                             break;
                         // How many scheduled messages I have
-                        case var m when m.RemoveDiacritics().StartsWith($"{Configuration.SALUTATION}, kolik mam naplanovanych zprav?"):
-                            int messageCount = scheduledMessages.Where(x => x.sender == sender).Count();
-                            if(messageCount == 0)
+                        case var m when Regex.IsMatch(m.RemoveDiacritics(), $"{Configuration.SALUTATION}, kolik mam naplanovanych zprav?", RegexOptions.IgnoreCase):
+                            var store1 = scheduledMessagesStore.GetAll(sender);
+                            if(store1 == null || store1.Count == 0)
                             {
                                 SendMessage("Nemáš žádné naplánované zprávy.", sender, null);
                             }
                             else
                             {
-                                SendMessage($"Právě máš naplánováno {messageCount} zpráv.", sender, null);
+                                SendMessage($"Právě máš naplánováno {store1.Count} zpráv.", sender, null);
                             }
                             break;
                         // DPMB
@@ -258,7 +258,6 @@ namespace Saturnin
         public void WelcomeUser(string recipient)
         {
             SendMessage(SaturninResponses.Hello, recipient, null);
-            SendMessage(SaturninResponses.Help, recipient, null);
         }
 #endregion
 
@@ -297,11 +296,12 @@ namespace Saturnin
         {
             try
             {
-                var group = groupsNames.FirstOrDefault(x => x.Item1.SequenceEqual(groupId));
-                if (group == null || DateTime.Now.Subtract(group.Item3).TotalDays >= 1)
+                var groups = groupsNames.GetAll();
+                var group = groups.FirstOrDefault(x => x.groupId.SequenceEqual(groupId));
+                if (group == null || DateTime.Now.Subtract(group.lastSync).TotalDays >= 1)
                 {
                     Log.Write($"Fetching group name for {string.Join(",", groupId)}");
-                    Log.Write($"Groups names in memory: {groupsNames.Count.ToString()}", Log.LogLevel.DEBUG);
+                    Log.Write($"Groups names in memory: {groups.Count.ToString()}", Log.LogLevel.DEBUG);
 
                     return await Task.Run(() =>
                     {
@@ -312,7 +312,12 @@ namespace Saturnin
                             groupsNames.Remove(group);
                         }
                         
-                        groupsNames.Add(new Tuple<byte[], string, DateTime>(groupId, groupName, DateTime.Now));
+                        groupsNames.Add(new GroupIdentification()
+                        {
+                            groupId = groupId,
+                            groupName = groupName,
+                            lastSync = DateTime.Now
+                        });
 
                         Log.Write($"Group members: {string.Join(", ", _service.getGroupMembers(groupId))}", Log.LogLevel.DEBUG);
 
@@ -321,8 +326,8 @@ namespace Saturnin
                 }
                 else
                 {
-                    Log.Write($"Loaded name {group.Item2} for {string.Join(",", groupId)}", Log.LogLevel.DEBUG);
-                    return group.Item2;
+                    Log.Write($"Loaded name {group.groupName} for {string.Join(",", groupId)}", Log.LogLevel.DEBUG);
+                    return group.groupName;
                 }
             }
             catch (Exception e)
@@ -347,15 +352,6 @@ namespace Saturnin
 #endregion
 
 #region Scheduled Messages
-        private struct ScheduledMessage
-        {
-            public DateTime scheduledTime;
-            public string recipient;
-            public string messageText;
-            public string sender;
-            public byte[] groupId;
-        }
-
         public void WatchScheduledMessages()
         {
             System.Timers.Timer _scheduledSender = new System.Timers.Timer(Configuration.POLLINGINTERVAL);
@@ -365,13 +361,13 @@ namespace Saturnin
 
         private void PollScheduledMessages(object sender, EventArgs e)
         {
-            var storeCount = scheduledMessages.Count;
+            var store = scheduledMessagesStore.GetAll();
 
-            Log.Write($"Polling for scheduled messages, actual count in store = {storeCount}", Log.LogLevel.DEBUG);
+            Log.Write($"Polling for scheduled messages, actual count in store = {((store != null) ? store.Count : 0)}", Log.LogLevel.DEBUG);
 
-            if(storeCount > 0)
+            if(store != null && store.Count > 0)
             {
-                foreach(var scheduledMessage in scheduledMessages)
+                foreach(var scheduledMessage in store)
                 {
                     if(scheduledMessage.scheduledTime <= DateTime.Now)
                     {
@@ -391,9 +387,11 @@ namespace Saturnin
                         {
                             SendMessage(scheduledMessage.messageText, scheduledMessage.recipient, scheduledMessage.groupId);
                         }
-                            
 
-                        scheduledMessages.Remove(scheduledMessage);
+                        if (scheduledMessagesStore.Remove(scheduledMessage) == false)
+                        {
+                            Log.Write($"Message {scheduledMessage.messageText} not removed!", Log.LogLevel.ERROR);
+                        }
                     }
                 }
             }
@@ -420,7 +418,7 @@ namespace Saturnin
                 groupId = groupId
             };
 
-            scheduledMessages.Add(scheduledMessage);
+            scheduledMessagesStore.Add(scheduledMessage);
 
             if(senderIsRecipient)
                 SendMessage($"Naplánoval jsem odeslání zprávy na tvé číslo dne {scheduledMessageTime.ToString("dd.MM.yyyy v HH:mm")}.", sender, groupId);
@@ -446,29 +444,18 @@ namespace Saturnin
                 lastSentMessage = DateTime.Now
             };
 
-            // Remove previous subscriber of this line
-            dpmbSubscribers.Add(dpmbSubscriber);
+            dpmbSubscribersStore.Add(dpmbSubscriber);
 
             SendMessage($"DPMB linku {dpmbSubscriber.lineNumber} jsem přidal do sledovaných.", sender, groupId);
         }
 
-        public struct DpmbSubscriber
-        {
-            public string lineNumber;
-            public GeoCoordinations centerPoint;
-            public double radius;
-            public string sender;
-            public byte[] groupId;
-            public DateTime lastSentMessage;
-        }
-
         private void PollDpmbSubscribers(object sender, EventArgs e)
         {
-            var storeCount = dpmbSubscribers.Count;
+            var store = dpmbSubscribersStore.GetAll();
 
-            Log.Write($"Polling for DPMB subscribers, actual count in store = {storeCount}", Log.LogLevel.DEBUG);
+            Log.Write($"Polling for DPMB subscribers, actual count in store = {((store != null) ? store.Count : 0)}", Log.LogLevel.DEBUG);
 
-            if (storeCount > 0)
+            if (store != null && store.Count > 0)
             {
                 WebClient webClient = new WebClient();
                 string json = webClient.DownloadStringTaskAsync("http://sotoris.cz/DataSource/CityHack2015/vehiclesBrno.aspx").Result;
@@ -476,7 +463,7 @@ namespace Saturnin
                 var buses = JsonConvert.DeserializeObject<List<DpmbRisObject>>(json);
 
 
-                foreach (var subscriber in dpmbSubscribers)
+                foreach (var subscriber in store)
                 {
                     if(DateTime.Now.Subtract(subscriber.lastSentMessage).TotalMinutes > 1)
                     {
@@ -486,7 +473,7 @@ namespace Saturnin
                             var message =
                                 $"V okruhu {subscriber.radius.ToString()} metrů od bodu [{subscriber.centerPoint.latitude.ToString()},{subscriber.centerPoint.longitude.ToString()}] se právě nachází {busesInRadius.Count.ToString()} vozů DPMB linky {subscriber.lineNumber}.\n";
 
-                            foreach (var bus in buses)
+                            foreach (var bus in busesInRadius)
                             {
                                 if (bus.headsign != "")
                                     message += $"\n{bus.headsign}";
@@ -495,8 +482,7 @@ namespace Saturnin
                             // Change lastSentTime in subscriber
                             var newSubscriber = subscriber;
                             newSubscriber.lastSentMessage = DateTime.Now;
-                            dpmbSubscribers.Remove(subscriber);
-                            dpmbSubscribers.Add(newSubscriber);
+                            dpmbSubscribersStore.Update(subscriber, newSubscriber);
 
                             SendMessage(message, subscriber.sender, subscriber.groupId);
                         }
@@ -516,25 +502,33 @@ namespace Saturnin
         {
             if(line != "")
             {
-                dpmbSubscribers.RemoveAll(x => x.sender == sender && x.lineNumber == line);
+                dpmbSubscribersStore.RemoveAll(sender, line);
                 SendMessage($"Odebral jsem všechna tvá sledování DPMB linky {line}.", sender, groupId);
             }
             else
             {
-                dpmbSubscribers.RemoveAll(x => x.sender == sender);
+                dpmbSubscribersStore.RemoveAll(sender);
                 SendMessage($"Odebral jsem všechna tvá sledování DPMB linek.", sender, groupId);
             }
         }
 
         public void ListAllMyDpmbSubscribers(string sender, byte[] groupId)
         {
-            var mySubscribers = dpmbSubscribers.Where(x => x.sender == sender).Select(x => new KeyValuePair<string, GeoCoordinations>(x.lineNumber, x.centerPoint));
+            var mySubscribers = dpmbSubscribersStore.GetAll(sender).Select(x => new KeyValuePair<string, GeoCoordinations>(x.lineNumber, x.centerPoint));
 
-            var lines = string.Join("\n", mySubscribers.Select(x => $"{x.Key} [{x.Value.latitude.ToString()},{x.Value.longitude.ToString()}]"));
+            if(mySubscribers != null && mySubscribers.Count() > 0)
+            {
+                var lines = string.Join("\n", mySubscribers.Select(x => $"{x.Key} [{x.Value.latitude.ToString()},{x.Value.longitude.ToString()}]"));
 
-            SendMessage(
-                $"Sleduji tyto DPMB linky:\n{lines}",
-                sender, groupId);
+                SendMessage(
+                    $"Sleduji tyto DPMB linky:\n{lines}",
+                    sender, groupId);
+            }
+            else
+            {
+                SendMessage("Nesleduji žádné DPMB linky.", sender, groupId);
+            }
+
         }
         #endregion
     }
