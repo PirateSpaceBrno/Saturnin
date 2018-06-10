@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto:400,400i,700&subset=latin-ext');
+@import url('https://fonts.googleapis.com/css?family=Roboto:400&subset=latin-ext');
 
 ::-moz-selection {
     background: #81c820;
@@ -25,6 +25,11 @@ a:hover {
     transition: all 0.5s linear;
 }
 
+p.form {
+    margin: 80px 0 0 0;
+    padding: 0;
+}
+
 #logo {
     position: absolute;
     top: 40px;
@@ -37,9 +42,42 @@ a:hover {
     position: absolute;
     top: 300px;
     text-align: center;
-    font-size: 14pt;
+    font-size: 11pt;
 }
 
-.bigText {
+h1 {
     font-size: 18pt;
+    font-weight: 400;
+}
+
+h2 {
+    font-size: 14pt;
+    font-weight: 400;
+}
+
+
+h3 {
+    font-size: 11pt;
+    font-weight: 400;
+    margin: 18pt 0 6pt 0;
+}
+
+.smallText {
+    font-size: 8.5pt;
+}
+
+input {
+    text-align: center;
+}
+
+#success, #error, #successText {
+    display: none;
+}
+
+#success {
+    color: #81c820;
+}
+
+#error {
+    color: #f00;
 }

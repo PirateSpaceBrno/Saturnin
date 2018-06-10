@@ -5,21 +5,79 @@
   <meta name="author" content="Ondřej Kotas, Pirate Space Brno" />
   <meta name="description" content="Pirátský bot pro komunikační síť Signal" />
   <meta name="robots" content="noindex, nofollow" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   
   <title>Saturnin - Pirátský bot pro Signal</title>
   
   <link href="style.css" rel="stylesheet" type="text/css" media="screen,projection" />
   <link href="favicon.png" rel="icon" type="image/x-icon" />
   <link href="favicon.png" rel="shortcut icon" type="image/x-icon" />
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.js"></script>
+
+  <script type="text/javascript">
+    function GetURLParameter(sParam) {
+        var sPageURL = decodeURIComponent(window.location.search.substring(1)),
+            sURLVariables = sPageURL.split('&'),
+            sParameterName,
+            i;
+
+        for (i = 0; i < sURLVariables.length; i++) {
+            sParameterName = sURLVariables[i].split('=');
+
+            if (sParameterName[0] === sParam) {
+                return sParameterName[1] === undefined ? true : sParameterName[1];
+            }
+        }
+    };
+
+    $(function(){
+        if(GetURLParameter('result')=='succ') {
+            $("#success").css("display", "block");
+            $(".successText").css("display", "block");
+            $("#error").css("display", "none");
+        }
+        else if(GetURLParameter('result')=='err') {
+            $("#success").css("display", "none");
+            $(".successText").css("display", "none");
+            $("#error").css("display", "block");
+        }
+        else {
+            $("#success").css("display", "none");
+            $(".successText").css("display", "none");
+            $("#error").css("display", "none");
+        }
+    });
+  </script>
 </head>
 
 <body>
     <img src="logo.png" alt="Saturnin" id="logo" />
     <div id="content">
         <p>
-            <span class="bigText">Ahoj. Já jsem Saturnin, tvůj Pirátský sluha pro síť Signal.</span><br />
-            <br />
-            Jsem svobodný, zveřejněný pod licencí <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPLv3</a> a mé zdrojové kódy najdeš na <a href="https://github.com/PirateSpaceBrno/Saturnin">https://github.com/PirateSpaceBrno/Saturnin</a>.
+            <h1>Ahoj. Já jsem Saturnin, tvůj Pirátský sluha pro síť Signal.</h1>
+            <span class="smallText">Jsem svobodný, zveřejněný pod licencí <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPLv3</a> a mé zdrojové kódy najdeš na <a href="https://github.com/PirateSpaceBrno/Saturnin">https://github.com/PirateSpaceBrno/Saturnin</a>.</span>
+        </p>
+
+        <p class="form">
+            <h2>Chceš začít využívat mé služby?</h2>
+            <h3>1. Připoj se k síti Signal</h3>
+            <a href="https://signal.org/"><img src="logo-signal.png" alt="Signal messaging" /></a><br />
+
+            <h3>2. Zadej své telefonní číslo</h3>
+            <form method="POST" action="http://saturnin.piratsky.space/welcome.php">
+            <input type="tel" name="phone" placeholder="+420123456789" />
+
+            <h3>3. Odešli svou registraci</h3>
+            <input type="submit" value="Odeslat" />
+            </form>
+
+            <h3 id="success">4. Hotovo!</h3>
+            <div class="successText smallText">
+                Nyní bys měl ode mě dostat zprávu na svého klienta pro síť Signal. Dále se již budeme bavit přes něj.<br />
+                Pro zobrazení všech mých dostupných příkazů mi odpověz na mou zprávu textem "Saturnine?" (bez uvozovek).
+            </div>
+            <h3 id="error">Bohužel jsem nemohl tvou registraci zpracovat.</h3>
         </p>
     </div>
 </body>

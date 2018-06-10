@@ -51,6 +51,7 @@ namespace Saturnin
                 Environment.Exit(0);
             }
         }
+
 #endregion
 
 #region Read messages and react
@@ -259,9 +260,9 @@ namespace Saturnin
         {
             SendMessage(SaturninResponses.Hello, recipient, null);
         }
-#endregion
+        #endregion
 
-#region Operate Signal service
+        #region Operate Signal service
         public async virtual void SendMessage(string message, string recipient, byte[] groupId)
         {
             try
@@ -444,6 +445,8 @@ namespace Saturnin
                 lastSentMessage = DateTime.Now
             };
 
+            //remove other subscribers on the same line
+            dpmbSubscribersStore.RemoveAll(sender, dpmbSubscriber.lineNumber);
             dpmbSubscribersStore.Add(dpmbSubscriber);
 
             SendMessage($"DPMB linku {dpmbSubscriber.lineNumber} jsem přidal do sledovaných.", sender, groupId);
@@ -467,24 +470,29 @@ namespace Saturnin
                 {
                     if(DateTime.Now.Subtract(subscriber.lastSentMessage).TotalMinutes > 1)
                     {
-                        var busesInRadius = WatchDpmbLine(subscriber, buses).Result;
-                        if (busesInRadius.Count > 0)
+                        var busesFilter = buses.Where(x => x.route == Convert.ToInt32(subscriber.lineNumber)).ToList();
+
+                        if(busesFilter != null && busesFilter.Count > 0)
                         {
-                            var message =
-                                $"V okruhu {subscriber.radius.ToString()} metrů od bodu [{subscriber.centerPoint.latitude.ToString()},{subscriber.centerPoint.longitude.ToString()}] se právě nachází {busesInRadius.Count.ToString()} vozů DPMB linky {subscriber.lineNumber}.\n";
-
-                            foreach (var bus in busesInRadius)
+                            var busesInRadius = WatchDpmbLine(subscriber, busesFilter).Result;
+                            if (busesInRadius.Count > 0)
                             {
-                                if (bus.headsign != "")
-                                    message += $"\n{bus.headsign}";
+                                var message =
+                                    $"V okruhu {subscriber.radius.ToString()} metrů od bodu [{subscriber.centerPoint.latitude.ToString()},{subscriber.centerPoint.longitude.ToString()}] se právě nachází {busesInRadius.Count.ToString()} vozů DPMB linky {subscriber.lineNumber}.\n";
+
+                                foreach (var bus in busesInRadius)
+                                {
+                                    if (bus.headsign != "")
+                                        message += $"\n{bus.headsign}";
+                                }
+
+                                // Change lastSentTime in subscriber
+                                var newSubscriber = subscriber;
+                                newSubscriber.lastSentMessage = DateTime.Now;
+                                dpmbSubscribersStore.Update(subscriber, newSubscriber);
+
+                                SendMessage(message, subscriber.sender, subscriber.groupId);
                             }
-
-                            // Change lastSentTime in subscriber
-                            var newSubscriber = subscriber;
-                            newSubscriber.lastSentMessage = DateTime.Now;
-                            dpmbSubscribersStore.Update(subscriber, newSubscriber);
-
-                            SendMessage(message, subscriber.sender, subscriber.groupId);
                         }
                     }
                 }

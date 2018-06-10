@@ -104,11 +104,7 @@ namespace Saturnin.Helpers
 
         public override bool Remove(T objectToRemove)
         {
-            var fileStore = GetAll();
-            var result = fileStore.RemoveAll(x => x.sender == objectToRemove.sender &&
-                x.lineNumber == objectToRemove.lineNumber &&
-                x.groupId == objectToRemove.groupId);
-            WriteToStore(fileStore);
+            var result = RemoveAll(objectToRemove.sender, objectToRemove.lineNumber);
             return Convert.ToBoolean(result);
         }
 
