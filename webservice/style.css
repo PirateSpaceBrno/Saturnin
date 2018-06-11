@@ -32,38 +32,42 @@ p.form {
 
 #logo {
     position: absolute;
-    top: 40px;
     left: 50%;
+    top: 40px;
+    width: 800px;
     margin-left: -400px;
+    height: auto;
 }
 
 #content {
-    width: 100%;
     position: absolute;
     top: 300px;
+    left: 20px;
+    right: 20px;
+    padding-bottom: 30px;
     text-align: center;
-    font-size: 11pt;
+    font-size: 0.9em;
 }
 
 h1 {
-    font-size: 18pt;
+    font-size: 1.5em;
     font-weight: 400;
 }
 
 h2 {
-    font-size: 14pt;
+    font-size: 1.2em;
     font-weight: 400;
 }
 
 
 h3 {
-    font-size: 11pt;
+    font-size: 0.9em;
     font-weight: 400;
     margin: 18pt 0 6pt 0;
 }
 
 .smallText {
-    font-size: 8.5pt;
+    font-size: 0.7em;
 }
 
 input {
@@ -80,4 +84,38 @@ input {
 
 #error {
     color: #f00;
+}
+
+@media all and (max-width: 850px) {
+    #logo {
+      max-width: 600px;
+      margin-left: -300px;
+      height: auto;
+    }
+
+    #content {
+        top: 200px;
+    }
+}
+@media all and (max-width: 650px) {
+    #logo {
+      max-width: 400px;
+      margin-left: -200px;
+      height: auto;
+    }
+    
+    #content {
+        top: 150px;
+    }
+} 
+@media all and (max-width: 450px) {
+    #logo {
+      max-width: 200px;
+      margin-left: -100px;
+      height: auto;
+    }
+
+    #content {
+        top: 100px;
+    }
 }

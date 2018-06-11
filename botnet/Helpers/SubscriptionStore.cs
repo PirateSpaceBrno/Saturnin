@@ -51,7 +51,7 @@ namespace Saturnin.Helpers
         public virtual bool Remove(T objectToRemove) {
             var fileStore = GetAll();
             var result = fileStore.RemoveAll(x => x.sender == objectToRemove.sender &&
-                x.groupId == objectToRemove.groupId);
+                x.groupId.SequenceEqual(objectToRemove.groupId));
             WriteToStore(fileStore);
             return Convert.ToBoolean(result);
         }
@@ -90,7 +90,7 @@ namespace Saturnin.Helpers
             var result = fileStore.RemoveAll(x => x.sender == objectToRemove.sender &&
                 x.recipient == objectToRemove.recipient &&
                 x.messageText == objectToRemove.messageText &&
-                x.groupId == objectToRemove.groupId);
+                x.groupId.SequenceEqual(objectToRemove.groupId));
             WriteToStore(fileStore);
             return Convert.ToBoolean(result);
         }

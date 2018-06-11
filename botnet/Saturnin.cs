@@ -44,6 +44,8 @@ namespace Saturnin
             {
                 _conn = dbus;
                 _service = _conn.GetObject<ISignal>(Configuration.DBUS_NAME, opath);
+
+                UpdateGroupsList();
             }
             catch(Exception e)
             {
@@ -350,6 +352,15 @@ namespace Saturnin
             });
         }
 
+        public void UpdateGroupsList()
+        {
+            var groupIds = GetGroupIds().Result;
+            foreach (var group in groupIds)
+            {
+                GetGroupName(group).Wait();
+            }
+        }
+
 #endregion
 
 #region Scheduled Messages
@@ -396,6 +407,9 @@ namespace Saturnin
                     }
                 }
             }
+
+            // Use timer to update groups list
+            UpdateGroupsList();
         }
 
         public void ScheduleMessage(Match match, string sender, byte[] groupId, bool senderIsRecipient = false)
